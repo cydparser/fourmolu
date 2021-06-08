@@ -58,6 +58,8 @@ import Ormolu.Printer.Meat.Type
 import Ormolu.Printer.Operators
 import Ormolu.Utils
 
+{-# ANN module ("Hlint: ignore Use camelCase" :: String) #-}
+
 -- | Style of a group of equations.
 data MatchGroupStyle
   = Function (LocatedN RdrName)
@@ -113,7 +115,7 @@ p_matchGroup' placer render style mg@MG {..} = do
   -- Since we are forcing braces on 'sepSemi' based on 'ob', we have to
   -- restore the brace state inside the sepsemi.
   ub <- bool dontUseBraces useBraces <$> canUseBraces
-  ob $ sepSemi (located' (ub . p_Match)) (unLoc mg_alts)
+  alignContext $ ob $ sepSemi (located' (ub . p_Match)) (unLoc mg_alts)
   where
     p_Match m@Match {..} =
       p_match'
@@ -258,7 +260,13 @@ p_match' placer render style isInfix strictness m_pats GRHSs {..} = do
               if isCase style && hasGuards
                 then RightArrow
                 else EqualSign
-        sep
+            -- If this is a function, then use the enclosing context set up by
+            -- the declaration group, otherwise make a context for this match
+            alignContext' = case style of
+              Function _ -> id
+              _ -> alignContext
+
+        alignContext' $ sep
           breakpoint
           (located' (p_grhs' placement placer render groupStyle))
           grhssGRHSs
@@ -273,10 +281,10 @@ p_match' placer render style isInfix strictness m_pats GRHSs {..} = do
     unless (length grhssGRHSs > 1) $
       case style of
         Function _ | hasGuards -> return ()
-        Function _ -> space >> inci equals
-        PatternBind -> space >> inci equals
+        Function _ -> align >> inci equals
+        PatternBind -> align >> inci equals
         s | isCase s && hasGuards -> return ()
-        _ -> space >> token'rarrow
+        _ -> align >> token'rarrow
     switchLayout [patGrhssSpan] $
       placeHanging placement p_body
     inci p_where
@@ -300,8 +308,8 @@ p_grhs' parentPlacement placer render style (GRHS _ guards body) =
     xs -> do
       txt "|"
       space
-      sitccIfTrailing (sep commaDel (sitcc . located' p_stmt) xs)
-      space
+      alignContext $ sitccIfTrailing (sep commaDel (sitcc . located' p_stmt) xs)
+      align
       inci $ case style of
         EqualSign -> equals
         RightArrow -> token'rarrow
@@ -424,7 +432,7 @@ p_stmt' placer render = \case
   LastStmt _ body _ _ -> located body render
   BindStmt _ p f@(getLocA -> l) -> do
     located p p_pat
-    space
+    align
     token'larrow
     let loc = getLocA p
         placement
@@ -478,7 +486,7 @@ p_stmt' placer render = \case
   RecStmt {..} -> do
     txt "rec"
     space
-    sitcc . located recS_stmts $ sepSemi (withSpacing (p_stmt' placer render))
+    alignContext . sitcc . located recS_stmts $ sepSemi (withSpacing (p_stmt' placer render))
 
 p_stmts ::
   ( Anno (Stmt GhcPs (LocatedA body)) ~ SrcSpanAnnA,
@@ -584,7 +592,7 @@ p_hsFieldBind ::
 p_hsFieldBind p_lhs HsFieldBind {..} = do
   p_lhs hfbLHS
   unless hfbPun $ do
-    space
+    align
     equals
     let placement =
           if onTheSameLine (getLoc' hfbLHS) (getLocA hfbRHS)
@@ -763,14 +771,14 @@ p_hsExpr' s = \case
                   (breakpoint >> txt "|" >> space)
                   p_seqBody
               p_seqBody =
-                sitccIfTrailing
+                alignContext . sitccIfTrailing
                   . sep
                     commaDel
                     (located' (sitcc . p_stmt))
               stmts = init xs
               yield = last xs
               lists = foldr (liftAppend . gatherStmt) [] stmts
-          located yield p_stmt
+          alignContext $ located yield p_stmt
           breakpoint
           txt "|"
           space
@@ -793,7 +801,7 @@ p_hsExpr' s = \case
         dotdot = case rec_dotdot of
           Just {} -> [txt ".."]
           Nothing -> []
-    inci . braces N $
+    alignContext . inci . braces N $
       sep commaDel sitcc (fields <> dotdot)
   RecordUpd {..} -> do
     located rupd_expr p_hsExpr
@@ -805,7 +813,7 @@ p_hsExpr' s = \case
               Ambiguous NoExtField n -> n
         p_recFields p_lbl =
           sep commaDel (sitcc . located' (p_hsFieldBind p_lbl))
-    inci . braces N $
+    alignContext . inci . braces N $
       either
         (p_recFields p_updLbl)
         (p_recFields $ located' $ coerce p_ldotFieldOccs)
@@ -912,7 +920,7 @@ p_patSynBind PSB {..} = do
     RecCon xs -> do
       space
       p_rdrName psb_id
-      inci $ do
+      alignContext . inci $ do
         let conSpans = getLocA . recordPatSynPatVar <$> xs
         switchLayout conSpans $ do
           unless (null xs) breakpointPreRecordBrace

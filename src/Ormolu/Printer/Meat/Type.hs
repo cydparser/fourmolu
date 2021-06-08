@@ -37,6 +37,9 @@ import {-# SOURCE #-} Ormolu.Printer.Meat.Declaration.OpTree (p_tyOpTree, tyOpTr
 import {-# SOURCE #-} Ormolu.Printer.Meat.Declaration.Value (p_hsSplice, p_stringLit)
 import Ormolu.Printer.Operators
 import Ormolu.Utils
+import Ormolu.Printer.Internal (alignContext, align)
+
+{-# ANN module ("Hlint: ignore Use camelCase" :: String) #-}
 
 p_hsType :: HsType GhcPs -> R ()
 p_hsType t = do
@@ -320,7 +323,7 @@ p_forallBndrsEnd ForAllVis = space >> token'rarrow
 
 p_conDeclFields :: [LConDeclField GhcPs] -> R ()
 p_conDeclFields xs =
-  braces N $ sep commaDel (sitcc . located' p_conDeclField) xs
+  alignContext . braces N $ sep commaDel (sitcc . located' p_conDeclField) xs
 
 p_conDeclField :: ConDeclField GhcPs -> R ()
 p_conDeclField ConDeclField {..} = do
