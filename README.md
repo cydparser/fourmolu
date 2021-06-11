@@ -85,6 +85,7 @@ in-style: right-align
 respectful: true
 fixities: []
 unicode: never
+align: false # align syntax elements horizonally (quite diff-unfriendly!)
 ```
 
 The configuration that most closely matches Ormolu's styling is:

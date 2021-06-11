@@ -60,7 +60,9 @@ data PrinterOpts f =
       poUnicode :: f Unicode
     , -- | Give the programmer more choice on where to insert blank lines
       poRespectful :: f Bool
-    }
+      -- | Enable horizontal alignment
+    , poAlign :: f Bool
+     }
   deriving (Generic)
 
 emptyPrinterOpts :: PrinterOpts Maybe
@@ -79,6 +81,7 @@ emptyPrinterOpts =
     , poInStyle = Nothing
     , poUnicode = Nothing
     , poRespectful = Nothing
+    , poAlign = Nothing
     }
 
 defaultPrinterOpts :: PrinterOpts Identity
@@ -97,6 +100,7 @@ defaultPrinterOpts =
     , poInStyle = pure InRightAlign
     , poUnicode = pure UnicodeNever
     , poRespectful = pure True
+    , poAlign = pure True
     }
 
 -- | Fill the field values that are 'Nothing' in the first argument
@@ -122,6 +126,7 @@ fillMissingPrinterOpts p1 p2 =
     , poInStyle = maybe (poInStyle p2) pure (poInStyle p1)
     , poUnicode = maybe (poUnicode p2) pure (poUnicode p1)
     , poRespectful = maybe (poRespectful p2) pure (poRespectful p1)
+    , poAlign = maybe (poAlign p2) pure (poAlign p1)
     }
 
 parsePrinterOptsCLI ::
@@ -182,6 +187,10 @@ parsePrinterOptsCLI f =
       "respectful"
       "Give the programmer more choice on where to insert blank lines (default: true)"
       "BOOL"
+    <*> f
+      "align"
+      "Whether to align some syntax elements horizontally"
+      "BOOL"
 
 parsePrinterOptsJSON ::
   Applicative f =>
@@ -202,6 +211,7 @@ parsePrinterOptsJSON f =
     <*> f "in-style"
     <*> f "unicode"
     <*> f "respectful"
+    <*> f "align"
 
 {---------- PrinterOpts field types ----------}
 

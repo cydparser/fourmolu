@@ -49,7 +49,7 @@ import GHC.Types.SourceText
 import GHC.Types.SrcLoc
 import Ormolu.Config
 import Ormolu.Printer.Combinators
-import Ormolu.Printer.Internal (sitccIfTrailing)
+import Ormolu.Printer.Internal (align, alignContext, sitccIfTrailing)
 import Ormolu.Printer.Meat.Common
 import {-# SOURCE #-} Ormolu.Printer.Meat.Declaration
 import {-# SOURCE #-} Ormolu.Printer.Meat.Declaration.OpTree

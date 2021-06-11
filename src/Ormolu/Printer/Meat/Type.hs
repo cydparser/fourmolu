@@ -37,7 +37,7 @@ import {-# SOURCE #-} Ormolu.Printer.Meat.Declaration.OpTree (p_tyOpTree, tyOpTr
 import {-# SOURCE #-} Ormolu.Printer.Meat.Declaration.Value (p_hsSplice, p_stringLit)
 import Ormolu.Printer.Operators
 import Ormolu.Utils
-import Ormolu.Printer.Internal (alignContext, align)
+import Ormolu.Printer.Internal (alignContext)
 
 {-# ANN module ("Hlint: ignore Use camelCase" :: String) #-}
 
