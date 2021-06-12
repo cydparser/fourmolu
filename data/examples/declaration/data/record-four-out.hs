@@ -2,9 +2,9 @@ module Main where
 
 -- | Something.
 data Foo = Foo
-    { fooX :: Int
+    { fooX           :: Int
     -- ^ X
-    , fooY :: Int
+    , fooY           :: Int
     -- ^ Y
     , fooBar, fooBaz :: NonEmpty (Identity Bool)
     -- ^ BarBaz
